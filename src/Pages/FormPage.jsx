@@ -23,10 +23,11 @@ function FormPage() {
     startDate: "",
     endDate: "",
   });
-  console.log(vehicles);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const getVehicleData = async () => {
     try {
@@ -96,7 +97,7 @@ function FormPage() {
         formData
       );
       console.log("Form Submitted Successfully:", response.data);
-      alert("Booking successful!");
+      setSuccessMessage("Booking successful!");
       setFormData({
         firstName: "",
         lastName: "",
@@ -109,7 +110,7 @@ function FormPage() {
       setCurrentStep(0);
     } catch (error) {
       console.error("Error submitting the form:", error);
-      alert("An error occurred while submitting the form.");
+      setErrorMessage("An error occurred while submitting the form.");
     }
   };
 
@@ -238,6 +239,17 @@ function FormPage() {
     <div className="flex flex-col justify-center h-screen">
       <div className="w-96 bg-white p-6 shadow-lg rounded-lg">
         <form>
+          {successMessage && (
+            <Alert severity="success" className="mb-4">
+              {successMessage}
+            </Alert>
+          )}
+
+          {errorMessage && (
+            <Alert severity="error" className="mb-4">
+              {errorMessage}
+            </Alert>
+          )}
           <div className="mb-4">
             <h2 className=" font-bold text-xl mb-2">
               {questions[currentStep].question}
