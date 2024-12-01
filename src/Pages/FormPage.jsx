@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+
 import {
   TextField,
   Radio,
@@ -11,6 +13,7 @@ import {
 } from "@mui/material";
 
 function FormPage() {
+  const [vehicles, setVehicle] = useState("");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -20,23 +23,35 @@ function FormPage() {
     startDate: "",
     endDate: "",
   });
+  console.log(vehicles);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [error, setError] = useState("");
 
-  // Temporary data for vehicle types and models
-  const vehicleData = {
-    2: ["Cruiser", "Sports"],
-    4: ["Hatchback", "SUV", "Sedan"],
+  const getVehicleData = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:3500/server/vehicle-types"
+      );
+      const data = response.data;
+
+      const groupedData = data.reduce((acc, vehicle) => {
+        const { wheelType, category, model } = vehicle;
+        if (!acc[wheelType]) acc[wheelType] = {};
+        if (!acc[wheelType][category]) acc[wheelType][category] = [];
+        acc[wheelType][category].push(model);
+        return acc;
+      }, {});
+
+      setVehicle(groupedData);
+    } catch (error) {
+      console.error("Error fetching vehicle data:", error);
+    }
   };
 
-  const modelData = {
-    Cruiser: ["Model A", "Model B"],
-    Sports: ["Model X", "Model Y"],
-    Hatchback: ["Model Z", "Model W"],
-    SUV: ["Model Q", "Model R"],
-    Sedan: ["Model S", "Model T"],
-  };
+  useEffect(() => {
+    getVehicleData();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,13 +89,36 @@ function FormPage() {
     setCurrentStep((prev) => prev + 1);
   };
 
-  const handleSubmit = () => {
-    console.log("Form Submitted", formData);
-    alert("Booking successful!");
+  const handleSubmit = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:3500/server/form-data",
+        formData
+      );
+      console.log("Form Submitted Successfully:", response.data);
+      alert("Booking successful!");
+      setFormData({
+        firstName: "",
+        lastName: "",
+        wheels: "",
+        vehicleType: "",
+        specificModel: "",
+        startDate: "",
+        endDate: "",
+      });
+      setCurrentStep(0);
+    } catch (error) {
+      console.error("Error submitting the form:", error);
+      alert("An error occurred while submitting the form.");
+    }
   };
 
-  const vehicleTypes = formData.wheels ? vehicleData[formData.wheels] : [];
-  const models = formData.vehicleType ? modelData[formData.vehicleType] : [];
+  const vehicleTypes = formData.wheels
+    ? Object.keys(vehicles[formData.wheels] || {})
+    : [];
+  const models = formData.vehicleType
+    ? vehicles[formData.wheels]?.[formData.vehicleType]
+    : [];
 
   const questions = [
     {
